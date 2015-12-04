@@ -11,20 +11,56 @@ dn.createDomainNode = function (nameComponent) {
   return new DomainNode(nameComponent)
 }
 
-DomainNode.prototype.addDomainComponent = function (domainPath, domain) {
-  if (domainPath.length > 0) {
-    var headComp = domainPath.charAt(0)
-    var tailComp = domainPath.substr(1, domainPath.length)
+//root: DomainNode, head of tree, recursively changed to next node
+//path: String, path to follow, recursively changed to tail of path
+//missing(node, head, tail, payload): func, behavior when their is no nodes with next path component
+//terminal(node, payload): func, behavior when you reach the end of the path
+//payload: Obj, any additional data your funcs care about
+function traverseTree(root, path, missing, terminal, payload) {
+  function traverseTreeRec(currentNode, path) {
+    if (path.length > 0) {
+      var headComp = path.charAt(0)
+      var tailComp = path.substr(1, path.length)
 
-    if (this.children[headComp] == undefined) {
-      this.children[headComp] = dn.createDomainNode(headComp)
+      if (currentNode.children[headComp] == undefined) {
+        missing(currentNode, headComp, tailComp, payload)
+      }
+
+      traverseTreeRec(currentNode.children[headComp], tailComp)
+    } else {
+      terminal(currentNode, payload)
     }
-
-    this.children[headComp].addDomainComponent(tailComp, domain)
-
-  } else {
-    this.domain = domain.resolveConflictingDomains(this.domain)
   }
+
+  traverseTreeRec(root, path)
+}
+
+function addIfMissing(node, headComp, tailComp, payload) {
+  node.children[headComp] = dn.createDomainNode(headComp)
+}
+
+DomainNode.prototype.addDomainComponent = function (domainPath, domain) {
+  var addDomain = function (node, domain) {
+    node.domain = domain.resolveConflictingDomains(node.domain)
+  }
+  traverseTree(this, domainPath, addIfMissing, addDomain, domain)
+  // if (domainPath.length > 0) {
+  //   var headComp = domainPath.charAt(0)
+  //   var tailComp = domainPath.substr(1, domainPath.length)
+  //
+  //   if (this.children[headComp] == undefined) {
+  //     this.children[headComp] = dn.createDomainNode(headComp)
+  //   }
+  //
+  //   this.children[headComp].addDomainComponent(tailComp, domain)
+  //
+  // } else {
+  //   this.domain = domain.resolveConflictingDomains(this.domain)
+  // }
+}
+
+DomainNode.prototype.addPeersForPartialPath = function (partialPath, peers) {
+
 }
 
 DomainNode.prototype.removeChild = function (child) {

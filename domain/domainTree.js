@@ -12,6 +12,10 @@ DomainTree.prototype.addDomain = function (domainPath, domain) {
   this.root.addDomainComponent(domainPath, domain)
 }
 
+DomainTree.prototype.addPeersForPath = function (partialPath, peers) {
+  this.root.addPeersForPartialPath(partialPath, peers)
+}
+
 DomainTree.prototype.prune = function (pruning) {
   return this
 }

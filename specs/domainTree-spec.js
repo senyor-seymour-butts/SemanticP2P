@@ -47,6 +47,17 @@ describe("DomainTree/", function () {
       })
     })
 
+    describe("AddPeersForPath", function () {
+      it("delegates to root", function () {
+        spyOn(testDT.root, "addPeersForPartialPath")
+        var testPath = "/test/path"
+        var testPeers = ["1", "2", "3"]
+
+        testDT.addPeersForPath(testPath, testPeers)
+        expect(testDT.root.addPeersForPartialPath).toHaveBeenCalledWith(testPath, testPeers)
+      })
+    })
+
     describe("Collapse", function () {
       it("delegates to root", function () {
         expect(true).toBeFalse()
