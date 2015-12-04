@@ -1,7 +1,7 @@
 function DomainNode (nameComponent) {
   this.nameComponent = nameComponent
   this.children = {}
-  this.prunedPeers = []
+  this.peers = []
   this.domain
 }
 
@@ -44,23 +44,14 @@ DomainNode.prototype.addDomainComponent = function (domainPath, domain) {
     node.domain = domain.resolveConflictingDomains(node.domain)
   }
   traverseTree(this, domainPath, addIfMissing, addDomain, domain)
-  // if (domainPath.length > 0) {
-  //   var headComp = domainPath.charAt(0)
-  //   var tailComp = domainPath.substr(1, domainPath.length)
-  //
-  //   if (this.children[headComp] == undefined) {
-  //     this.children[headComp] = dn.createDomainNode(headComp)
-  //   }
-  //
-  //   this.children[headComp].addDomainComponent(tailComp, domain)
-  //
-  // } else {
-  //   this.domain = domain.resolveConflictingDomains(this.domain)
-  // }
 }
 
 DomainNode.prototype.addPeersForPartialPath = function (partialPath, peers) {
-
+  var addPeers = function (node, peers) {
+    //naive approach assuming no overlap of existing and new peers
+    node.peers = node.peers.concat(peers)
+  }
+  traverseTree(this, partialPath, addIfMissing, addPeers, peers)
 }
 
 DomainNode.prototype.removeChild = function (child) {

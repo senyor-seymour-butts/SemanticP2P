@@ -12,12 +12,16 @@ describe("DomainNode/", function () {
   })
 
   describe("Functions/", function () {
-    describe("AddDomainComponent", function () {
-      var testDN, testDMN, testDMNPath
+    var testDN, testDMNPath
 
+    beforeEach(function () {
+      testDN = dn.createDomainNode("\0")
+      testDMNPath = "test"
+    })
+
+    describe("AddDomainComponent", function () {
+      var testDMN
       beforeEach(function () {
-        testDN = dn.createDomainNode("\0")
-        testDMNPath = "test"
         testDMN = dmn.createDomain()
       })
 
@@ -34,6 +38,8 @@ describe("DomainNode/", function () {
           recDN = recDN.children[expectedComp]
           recPath = recPath.substr(1,recPath.length)
         }
+
+        expect(recDN.domain).toBeDefined()
       })
 
       it("for existing children components", function () {
@@ -59,6 +65,8 @@ describe("DomainNode/", function () {
           recDN = recDN.children[expectedComp]
           recPath = recPath.substr(1,recPath.length)
         }
+
+        expect(recDN.domain).toBeDefined()
       })
 
       it("resolves confliciting domains", function () {
@@ -72,6 +80,51 @@ describe("DomainNode/", function () {
 
         expect(testDMN.resolveConflictingDomains).toHaveBeenCalledWith(expectedDMN)
         expect(testDN.domain).toEqual(expectedDMN);
+      })
+    })
+
+    describe("AddPeersForPartialPath", function () {
+      var testPeers
+      beforeEach(function () {
+        testPeers = [1, 2, 3]
+      })
+
+      it("populates peers for empty list at end of path", function () {
+        testDN.addPeersForPartialPath(testDMNPath, testPeers)
+
+        var recPath = testDMNPath
+        var recDN = testDN
+
+        while (recPath.length > 0) {
+          var expectedComp = recPath.charAt(0)
+          expect(recDN.children[expectedComp]).toBeDefined()
+          expect(recDN.peers.length).toEqual(0)
+
+          recDN = recDN.children[expectedComp]
+          recPath = recPath.substr(1,recPath.length)
+        }
+
+        expect(recDN.peers).toEqual(testPeers)
+      })
+
+      it("unions peer lists for existing list at end of path", function () {
+        var expectedPeers = [1, 2, 3, 4]
+        testDN.addPeersForPartialPath(testDMNPath, testPeers)
+        testDN.addPeersForPartialPath(testDMNPath, [2, 3, 4])
+
+        var recPath = testDMNPath
+        var recDN = testDN
+        
+        while (recPath.length > 0) {
+          var expectedComp = recPath.charAt(0)
+          expect(recDN.children[expectedComp]).toBeDefined()
+          expect(recDN.peers.length).toEqual(0)
+
+          recDN = recDN.children[expectedComp]
+          recPath = recPath.substr(1,recPath.length)
+        }
+
+        expect(recDN.peers).toEqual(expectedPeers)
       })
     })
   })
