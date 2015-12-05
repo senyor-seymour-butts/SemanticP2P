@@ -19,6 +19,12 @@ describe("DomainNode/", function () {
       testDMNPath = "test"
     })
 
+    describe("TraverseTree", function () {
+      // Test for:
+      // -happy path
+      // -multiple '/' in a row
+      // -path has no length
+    })
     describe("AddDomainComponent", function () {
       var testDMN
       beforeEach(function () {
@@ -76,7 +82,8 @@ describe("DomainNode/", function () {
         testDN.domain = expectedDMN
         spyOn(testDMN, "resolveConflictingDomains").andReturn(expectedDMN)
 
-        testDN.addDomainComponent("", testDMN)
+        testDN.addDomainComponent("a", expectedDMN)
+        testDN.addDomainComponent("a", testDMN)
 
         expect(testDMN.resolveConflictingDomains).toHaveBeenCalledWith(expectedDMN)
         expect(testDN.domain).toEqual(expectedDMN);
@@ -114,7 +121,7 @@ describe("DomainNode/", function () {
 
         var recPath = testDMNPath
         var recDN = testDN
-        
+
         while (recPath.length > 0) {
           var expectedComp = recPath.charAt(0)
           expect(recDN.children[expectedComp]).toBeDefined()

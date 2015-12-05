@@ -1,6 +1,7 @@
 function DomainNode (nameComponent) {
   this.nameComponent = nameComponent
   this.children = {}
+  this.resourceChildren = {}
   this.peers = []
   this.domain
 }
@@ -13,30 +14,42 @@ dn.createDomainNode = function (nameComponent) {
 
 //root: DomainNode, head of tree, recursively changed to next node
 //path: String, path to follow, recursively changed to tail of path
-//missing(node, head, tail, payload): func, behavior when their is no nodes with next path component
+//missing(node, head, tail, isResource, payload): func, behavior when their is no nodes with next path component
 //terminal(node, payload): func, behavior when you reach the end of the path
 //payload: Obj, any additional data your funcs care about
 function traverseTree(root, path, missing, terminal, payload) {
-  function traverseTreeRec(currentNode, path) {
+  function traverseTreeRec(currentNode, path, isResource) {
     if (path.length > 0) {
-      var headComp = path.charAt(0)
-      var tailComp = path.substr(1, path.length)
+      var subPath = path[0]
+      var headComp = subPath.charAt(0)
+      var tailComp = subPath.substr(1, subPath.length)
 
-      if (currentNode.children[headComp] == undefined) {
-        missing(currentNode, headComp, tailComp, payload)
+      var pathCategory = isResource ? currentNode.resourceChildren : currentNode.children
+
+      if (pathCategory[headComp] == undefined) {
+        missing(currentNode, headComp, tailComp, isResource, payload)
       }
 
-      traverseTreeRec(currentNode.children[headComp], tailComp)
+      if (tailComp.length == 0) {
+        traverseTreeRec(pathCategory[headComp], path.slice(1), true)
+      } else {
+        traverseTreeRec(pathCategory[headComp], [tailComp].concat(path.slice(1)), false)
+      }
+
     } else {
       terminal(currentNode, payload)
     }
   }
 
-  traverseTreeRec(root, path)
+  if (path.length > 0) {
+    var resourceSepPath = path.split("/")
+    traverseTreeRec(root, resourceSepPath, false)
+  }
 }
 
-function addIfMissing(node, headComp, tailComp, payload) {
-  node.children[headComp] = dn.createDomainNode(headComp)
+function addIfMissing(node, headComp, tailComp, isResource, payload) {
+  var pathCategory = isResource ? node.resourceChildren : node.children
+  pathCategory[headComp] = dn.createDomainNode(headComp)
 }
 
 DomainNode.prototype.addDomainComponent = function (domainPath, domain) {
