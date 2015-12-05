@@ -82,8 +82,8 @@ describe("DomainNode/", function () {
         testDN.domain = expectedDMN
         spyOn(testDMN, "resolveConflictingDomains").andReturn(expectedDMN)
 
-        testDN.addDomainComponent("a", expectedDMN)
-        testDN.addDomainComponent("a", testDMN)
+        testDN.addDomainComponent("a/b/c", expectedDMN)
+        testDN.addDomainComponent("a/b/c", testDMN)
 
         expect(testDMN.resolveConflictingDomains).toHaveBeenCalledWith(expectedDMN)
         expect(testDN.domain).toEqual(expectedDMN);
