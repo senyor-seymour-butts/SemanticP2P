@@ -78,26 +78,24 @@ function addIfMissing(node, maxPrefix, isResource, payload) {
 }
 
 function sharedPathPrefix(subPath, existingComponents) {
-  var maxPrefix = {}
-  maxPrefix[Prefix] = maxPrefix[OldTail] = ""
-  maxPrefix[NewTail] = subPath
-
-  for (i = 0; i < existingComponents.length; i++) {
-    var currPrefix = maximumSharedPrefix(existingComponents[i], subPath)
-    maxPrefix = maxPrefix[Prefix].length >= currPrefix[Prefix].length ? maxPrefix : currPrefix
-  }
-  return maxPrefix
-}
-
-function maximumSharedPrefix(s1, s2) {
-  var maxPrefixLength = Math.max(s1.length, s2.length)
-  for (i = 0; i < maxPrefixLength; i++) {
-    if (s1.charAt(i) != s2.charAt(i)) {
-      return {prefix: s1.substring(0,i), oldTail: s1.substr(i), newTail: s2.substr(i)}
-    } else if (s1.length == s2.length && i == s1.length-1) {
-      return {prefix: s1, oldTail: "", newTail: ""}
+  function maximumSharedPrefix(s1, s2) {
+    var maxPrefixLength = Math.max(s1.length, s2.length)
+    for (i = 0; i < maxPrefixLength; i++) {
+      if (s1.charAt(i) != s2.charAt(i)) {
+        return {prefix: s1.substring(0,i), oldTail: s1.substr(i), newTail: s2.substr(i)}
+      } else if (s1.length == s2.length && i == s1.length-1) {
+        return {prefix: s1, oldTail: "", newTail: ""}
+      }
     }
   }
+  
+  for (i = 0; i < existingComponents.length; i++) {
+    var currPrefix = maximumSharedPrefix(existingComponents[i], subPath)
+    if (currPrefix[Prefix].length > 0) {
+      return currPrefix
+    }
+  }
+  return {prefix: "", oldTail: "", newTail: subPath}
 }
 
 DomainNode.prototype.addDomainComponent = function (domainPath, domain) {
