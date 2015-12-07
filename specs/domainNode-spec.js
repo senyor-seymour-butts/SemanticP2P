@@ -119,20 +119,20 @@ describe("DomainNode/", function () {
         xit("and return error for malformed path", function () {
 
         })
-      })
 
-      xit("resolves confliciting domains", function () {
-        var expectedDMN = dmn.createDomain()
-        expectedDMN.localContentPath = "some/test/path"
+        xit("resolves confliciting domains", function () {
+          var expectedDMN = dmn.createDomain()
+          expectedDMN.localContentPath = "some/test/path"
 
-        testDN.domain = expectedDMN
-        spyOn(testDMN, "resolveConflictingDomains").andReturn(expectedDMN)
+          testDN.domain = expectedDMN
+          spyOn(testDMN, "resolveConflictingDomains").andReturn(expectedDMN)
 
-        testDN.addDomainComponent("a/b/c", expectedDMN)
-        testDN.addDomainComponent("a/b/c", testDMN)
+          testDN.addDomainComponent("a/b/c", expectedDMN)
+          testDN.addDomainComponent("a/b/c", testDMN)
 
-        expect(testDMN.resolveConflictingDomains).toHaveBeenCalledWith(expectedDMN)
-        expect(testDN.domain).toEqual(expectedDMN);
+          expect(testDMN.resolveConflictingDomains).toHaveBeenCalledWith(expectedDMN)
+          expect(testDN.domain).toEqual(expectedDMN);
+        })
       })
     })
 

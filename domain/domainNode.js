@@ -12,9 +12,9 @@ dn.createDomainNode = function (nameComponent) {
   return new DomainNode(nameComponent)
 }
 
-var PrefixKey = "pre"
-var PrefixChildKey = "trunc1"
-var PrefixCurrentKey = "trunc2"
+var Prefix = "prefix"
+var OldTail = "oldTail"
+var NewTail = "newTail"
 
 //root: DomainNode, head of tree, recursively changed to next node
 //path: String, path to follow, recursively changed to tail of path
@@ -29,10 +29,10 @@ function traverseTree(root, path, missing, terminal, payload) {
       var maxPrefix = sharedPathPrefix(path[0], Object.keys(pathCategory))
 
       var updatedTraversal
-      if (pathCategory[maxPrefix[PrefixKey]] == undefined) {
+      if (pathCategory[maxPrefix[Prefix]] == undefined) {
         updatedTraversal = missing(currentNode, maxPrefix, isResource, payload)
       } else {
-        updatedTraversal = {recNode: pathCategory[maxPrefix[PrefixKey]], tail: maxPrefix[PrefixCurrentKey]}
+        updatedTraversal = {recNode: pathCategory[maxPrefix[Prefix]], tail: maxPrefix[NewTail]}
       }
 
       if (updatedTraversal != undefined) {
@@ -57,21 +57,21 @@ function addIfMissing(node, maxPrefix, isResource, payload) {
   var pathCategory = isResource ? node.resourceChildren : node.children
   var updatedTrav = {recNode: undefined, tail: ""}
 
-  if (maxPrefix[PrefixKey].length == 0 && maxPrefix[PrefixCurrentKey].length > 0) {
-    updatedTrav.recNode = pathCategory[maxPrefix[PrefixCurrentKey]] = dn.createDomainNode(maxPrefix[PrefixCurrentKey])
+  if (maxPrefix[Prefix].length == 0 && maxPrefix[NewTail].length > 0) {
+    updatedTrav.recNode = pathCategory[maxPrefix[NewTail]] = dn.createDomainNode(maxPrefix[NewTail])
     return updatedTrav
 
-  } else if (maxPrefix[PrefixChildKey].length > 0 ) {
-    updatedTrav.recNode = pathCategory[maxPrefix[PrefixKey]] = dn.createDomainNode(maxPrefix[PrefixKey])
+  } else if (maxPrefix[OldTail].length > 0 ) {
+    updatedTrav.recNode = pathCategory[maxPrefix[Prefix]] = dn.createDomainNode(maxPrefix[Prefix])
 
-    var oldPath = maxPrefix[PrefixKey] + maxPrefix[PrefixChildKey]
+    var oldPath = maxPrefix[Prefix] + maxPrefix[OldTail]
     var oldChild = pathCategory[oldPath]
 
     delete pathCategory[oldPath]
-    oldChild.nameComponent = maxPrefix[PrefixChildKey]
+    oldChild.nameComponent = maxPrefix[OldTail]
 
-    updatedTrav.recNode.children[maxPrefix[PrefixChildKey]] = oldChild
-    updatedTrav.tail = maxPrefix[PrefixCurrentKey]
+    updatedTrav.recNode.children[maxPrefix[OldTail]] = oldChild
+    updatedTrav.tail = maxPrefix[NewTail]
 
     return updatedTrav
   }
@@ -79,12 +79,12 @@ function addIfMissing(node, maxPrefix, isResource, payload) {
 
 function sharedPathPrefix(subPath, existingComponents) {
   var maxPrefix = {}
-  maxPrefix[PrefixKey] = maxPrefix[PrefixChildKey] = ""
-  maxPrefix[PrefixCurrentKey] = subPath
+  maxPrefix[Prefix] = maxPrefix[OldTail] = ""
+  maxPrefix[NewTail] = subPath
 
   for (i = 0; i < existingComponents.length; i++) {
     var currPrefix = maximumSharedPrefix(existingComponents[i], subPath)
-    maxPrefix = maxPrefix[PrefixKey].length >= currPrefix[PrefixKey].length ? maxPrefix : currPrefix
+    maxPrefix = maxPrefix[Prefix].length >= currPrefix[Prefix].length ? maxPrefix : currPrefix
   }
   return maxPrefix
 }
@@ -93,9 +93,9 @@ function maximumSharedPrefix(s1, s2) {
   var maxPrefixLength = Math.max(s1.length, s2.length)
   for (i = 0; i < maxPrefixLength; i++) {
     if (s1.charAt(i) != s2.charAt(i)) {
-      return {pre: s1.substring(0,i), trunc1: s1.substr(i), trunc2: s2.substr(i)}
+      return {prefix: s1.substring(0,i), oldTail: s1.substr(i), newTail: s2.substr(i)}
     } else if (s1.length == s2.length && i == s1.length-1) {
-      return {pre: s1, trunc1: "", trunc2: ""}
+      return {prefix: s1, oldTail: "", newTail: ""}
     }
   }
 }
