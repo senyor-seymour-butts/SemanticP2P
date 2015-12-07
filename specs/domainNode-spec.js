@@ -12,70 +12,116 @@ describe("DomainNode/", function () {
   })
 
   describe("Functions/", function () {
-    var testDN, testDMNPath
+    var testDN, simplePath, simpleResPath
 
     beforeEach(function () {
       testDN = dn.createDomainNode("\0")
-      testDMNPath = "test"
+      simplePath = "test"
+      simpleResPath = "test/some/more"
     })
 
-    describe("TraverseTree", function () {
-      // Test for:
-      // -happy path
-      // -multiple '/' in a row
-      // -path has no length
-    })
     describe("AddDomainComponent", function () {
       var testDMN
       beforeEach(function () {
         testDMN = dmn.createDomain()
       })
 
-      it("for empty tree", function () {
-        testDN.addDomainComponent(testDMNPath, testDMN)
-        var recPath = testDMNPath
-        var recDN = testDN
+      describe("to empty tree", function () {
+        it("for simple path", function () {
+          testDN.addDomainComponent(simplePath, testDMN)
 
-        while (recPath.length > 0) {
-          var expectedComp = recPath.charAt(0)
-          expect(recDN.children[expectedComp]).toBeDefined()
-          expect(recDN.domain).toBeUndefined()
+          expect(testDN.children).toBeDefined()
+          var expected = testDN.children[simplePath]
+          expect(expected).toBeDefined()
+          expect(Object.keys(expected.children).length).toEqual(0)
+          expect(expected.domain).toEqual(testDMN)
+        })
 
-          recDN = recDN.children[expectedComp]
-          recPath = recPath.substr(1,recPath.length)
-        }
+        it("for simple resource path", function () {
+          testDN.addDomainComponent(simpleResPath, testDMN)
 
-        expect(recDN.domain).toBeDefined()
-      })
+          var pathComps = simpleResPath.split("/")
+          var recNode = testDN
 
-      it("for existing children components", function () {
-        var secondPath = "tea"
-
-        testDN.addDomainComponent(testDMNPath, testDMN)
-        testDN.addDomainComponent(secondPath, dmn.createDomain())
-
-        var recPath = secondPath
-        var recDN = testDN
-
-        while (recPath.length > 0) {
-          var expectedComp = recPath.charAt(0)
-
-          if (expectedComp == "a") {
-            expect(Object.keys(recDN.children).length).toEqual(2)
-          } else {
-            expect(Object.keys(recDN.children).length).toEqual(1)
+          for (i=0; i<pathComps.length; i++) {
+            var expected
+            if (i == 0) {
+              expect(Object.keys(recNode.children).length).toEqual(1)
+              expected = recNode.children[pathComps[i]]
+            } else {
+              expect(Object.keys(recNode.children).length).toEqual(0)
+              expected = recNode.resourceChildren[pathComps[i]]
+            }
+            expect(expected).toBeDefined()
+            recNode = expected
           }
+          expect(expected.domain).toEqual(testDMN)
+        })
 
-          expect(recDN.children[expectedComp]).toBeDefined()
+        it("and return error for empty path", function () {
+          testDN.addDomainComponent("", testDMN)
 
-          recDN = recDN.children[expectedComp]
-          recPath = recPath.substr(1,recPath.length)
-        }
+          expect(Object.keys(testDN.children).length).toEqual(0)
+          expect(Object.keys(testDN.resourceChildren).length).toEqual(0)
+          expect(testDN.domain).toBeUndefined()
 
-        expect(recDN.domain).toBeDefined()
+          expect(true).toBeFalse()
+        })
+
+        it("and return error for malformed path", function () {
+          testDN.addDomainComponent("test///", testDMN)
+
+          expect(Object.keys(testDN.children).length).toEqual(0)
+          expect(Object.keys(testDN.resourceChildren).length).toEqual(0)
+          expect(testDN.domain).toBeUndefined()
+        })
       })
 
-      it("resolves confliciting domains", function () {
+      describe("to existing tree", function () {
+        beforeEach(function () {
+          testDN.addDomainComponent("test/some/path", testDMN)
+        })
+
+        it("for simple path", function () {
+          testDN.addDomainComponent("tell", testDMN)
+
+          var partialComp = testDN.children["te"]
+          expect(partialComp).toBeDefined()
+
+          expect(Object.keys(partialComp.children).length).toEqual(2)
+          expect(Object.keys(partialComp.resourceChildren).length).toEqual(0)
+
+          expect(partialComp.children["st"]).toBeDefined()
+          expect(partialComp.children["ll"]).toBeDefined()
+          expect(partialComp.children["ll"].domain).toEqual(testDMN)
+        })
+
+        it("for simple resource path", function () {
+          testDN.addDomainComponent("test/someOther", testDMN)
+
+          var partialComp = testDN.children["test"]
+          expect(partialComp).toBeDefined()
+
+          expect(Object.keys(partialComp.children).length).toEqual(0)
+          expect(Object.keys(partialComp.resourceChildren).length).toEqual(1)
+
+          var resPartialComp = partialComp.resourceChildren["some"]
+          expect(resPartialComp.resourceChildren["path"]).toBeDefined()
+
+          expect(resPartialComp.children["Other"]).toBeDefined()
+          expect(resPartialComp.children["Other"].domain).toEqual(testDMN)
+        })
+
+        xit("and return error for empty path", function () {
+
+        })
+
+        xit("and return error for malformed path", function () {
+
+        })
+      })
+
+      xit("resolves confliciting domains", function () {
         var expectedDMN = dmn.createDomain()
         expectedDMN.localContentPath = "some/test/path"
 
@@ -90,7 +136,7 @@ describe("DomainNode/", function () {
       })
     })
 
-    describe("AddPeersForPartialPath", function () {
+    xdescribe("AddPeersForPartialPath", function () {
       var testPeers
       beforeEach(function () {
         testPeers = [1, 2, 3]

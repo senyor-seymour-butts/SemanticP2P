@@ -12,30 +12,45 @@ dn.createDomainNode = function (nameComponent) {
   return new DomainNode(nameComponent)
 }
 
+var PrefixKey = "pre"
+var PrefixChildKey = "trunc1"
+var PrefixCurrentKey = "trunc2"
+
 //root: DomainNode, head of tree, recursively changed to next node
 //path: String, path to follow, recursively changed to tail of path
-//missing(node, head, tail, isResource, payload): func, behavior when their is no nodes with next path component
+//missing(node, maxPrefix, isResource, payload): func, behavior when their is no nodes with next path component
 //terminal(node, payload): func, behavior when you reach the end of the path
 //payload: Obj, any additional data your funcs care about
 function traverseTree(root, path, missing, terminal, payload) {
   function traverseTreeRec(currentNode, path, isResource) {
     if (path.length > 0) {
       var subPath = path[0]
-      var headComp = subPath.charAt(0)
-      var tailComp = subPath.substr(1, subPath.length)
-
       var pathCategory = isResource ? currentNode.resourceChildren : currentNode.children
 
-      if (pathCategory[headComp] == undefined) {
-        missing(currentNode, headComp, tailComp, isResource, payload)
+      var maxPrefix = {}
+      maxPrefix[PrefixKey] = maxPrefix[PrefixChildKey] = ""
+      maxPrefix[PrefixCurrentKey] = subPath
+
+      var allComps = Object.keys(pathCategory)
+      for (i = 0; i < allComps.length; i++) {
+        var currPrefix = maximumSharedPrefix(allComps[i], subPath)
+        maxPrefix = maxPrefix[PrefixKey].length >= currPrefix[PrefixKey].length ? maxPrefix : currPrefix
       }
 
-      if (tailComp.length == 0) {
-        traverseTreeRec(pathCategory[headComp], path.slice(1), true)
+      var updatedTraversal
+      if (pathCategory[maxPrefix[PrefixKey]] == undefined) {
+        updatedTraversal = missing(currentNode, maxPrefix, isResource, payload)
       } else {
-        traverseTreeRec(pathCategory[headComp], [tailComp].concat(path.slice(1)), false)
+        updatedTraversal = {recNode: pathCategory[maxPrefix[PrefixKey]], tail: maxPrefix[PrefixCurrentKey]}
       }
 
+      if (updatedTraversal != undefined) {
+        if (updatedTraversal.tail.length == 0) {
+          traverseTreeRec(updatedTraversal.recNode, path.slice(1), true)
+        } else {
+          traverseTreeRec(updatedTraversal.recNode, [updatedTraversal.tail].concat(path.slice(1)), false)
+        }
+      }
     } else {
       terminal(currentNode, payload)
     }
@@ -47,9 +62,39 @@ function traverseTree(root, path, missing, terminal, payload) {
   }
 }
 
-function addIfMissing(node, headComp, tailComp, isResource, payload) {
+function addIfMissing(node, maxPrefix, isResource, payload) {
   var pathCategory = isResource ? node.resourceChildren : node.children
-  pathCategory[headComp] = dn.createDomainNode(headComp)
+  var updatedTrav = {recNode: undefined, tail: ""}
+
+  if (maxPrefix[PrefixKey].length == 0 && maxPrefix[PrefixCurrentKey].length > 0) {
+    updatedTrav.recNode = pathCategory[maxPrefix[PrefixCurrentKey]] = dn.createDomainNode(maxPrefix[PrefixCurrentKey])
+    return updatedTrav
+
+  } else if (maxPrefix[PrefixChildKey].length > 0 ) {
+    updatedTrav.recNode = pathCategory[maxPrefix[PrefixKey]] = dn.createDomainNode(maxPrefix[PrefixKey])
+
+    var oldPath = maxPrefix[PrefixKey] + maxPrefix[PrefixChildKey]
+    var oldChild = pathCategory[oldPath]
+
+    delete pathCategory[oldPath]
+    oldChild.nameComponent = maxPrefix[PrefixChildKey]
+
+    updatedTrav.recNode.children[maxPrefix[PrefixChildKey]] = oldChild
+    updatedTrav.tail = maxPrefix[PrefixCurrentKey]
+
+    return updatedTrav
+  }
+}
+
+function maximumSharedPrefix(s1, s2) {
+  var maxPrefixLength = Math.max(s1.length, s2.length)
+  for (i = 0; i < maxPrefixLength; i++) {
+    if (s1.charAt(i) != s2.charAt(i)) {
+      return {pre: s1.substring(0,i), trunc1: s1.substr(i), trunc2: s2.substr(i)}
+    } else if (s1.length == s2.length && i == s1.length-1) {
+      return {pre: s1, trunc1: "", trunc2: ""}
+    }
+  }
 }
 
 DomainNode.prototype.addDomainComponent = function (domainPath, domain) {
