@@ -14,10 +14,6 @@ dn.createDomainNode = function (nameComponent) {
   return new DomainNode(nameComponent)
 }
 
-var Prefix = pUtil.Prefix
-var OldTail = pUtil.OldTail
-var NewTail = pUtil.NewTail
-
 //root: DomainNode, head of tree, recursively changed to next node
 //path: String, path to follow, recursively changed to tail of path
 //missing(node, maxPrefix, isResource, payload): func, behavior when their is no nodes with next path component
@@ -31,10 +27,10 @@ function traverseTree(root, path, missing, terminal, payload) {
       var maxPrefix = pUtil.sharedPathPrefix(path[0], Object.keys(pathCategory))
 
       var updatedTraversal
-      if (pathCategory[maxPrefix[Prefix]] == undefined) {
+      if (pathCategory[maxPrefix.prefix] == undefined) {
         updatedTraversal = missing(currentNode, maxPrefix, isResource, payload)
       } else {
-        updatedTraversal = {recNode: pathCategory[maxPrefix[Prefix]], tail: maxPrefix[NewTail]}
+        updatedTraversal = {recNode: pathCategory[maxPrefix.prefix], tail: maxPrefix.newTail}
       }
 
       if (updatedTraversal != undefined) {
@@ -59,21 +55,21 @@ function addIfMissing(node, maxPrefix, isResource, payload) {
   var pathCategory = isResource ? node.resourceChildren : node.children
   var updatedTrav = {recNode: undefined, tail: ""}
 
-  if (maxPrefix[Prefix].length == 0 && maxPrefix[NewTail].length > 0) {
-    updatedTrav.recNode = pathCategory[maxPrefix[NewTail]] = dn.createDomainNode(maxPrefix[NewTail])
+  if (maxPrefix.prefix.length == 0 && maxPrefix.newTail.length > 0) {
+    updatedTrav.recNode = pathCategory[maxPrefix.newTail] = dn.createDomainNode(maxPrefix.newTail)
     return updatedTrav
 
-  } else if (maxPrefix[OldTail].length > 0 ) {
-    updatedTrav.recNode = pathCategory[maxPrefix[Prefix]] = dn.createDomainNode(maxPrefix[Prefix])
+  } else if (maxPrefix.oldTail.length > 0 ) {
+    updatedTrav.recNode = pathCategory[maxPrefix.prefix] = dn.createDomainNode(maxPrefix.prefix)
 
-    var oldPath = maxPrefix[Prefix] + maxPrefix[OldTail]
+    var oldPath = maxPrefix.prefix + maxPrefix.oldTail
     var oldChild = pathCategory[oldPath]
 
     delete pathCategory[oldPath]
-    oldChild.nameComponent = maxPrefix[OldTail]
+    oldChild.nameComponent = maxPrefix.oldTail
 
-    updatedTrav.recNode.children[maxPrefix[OldTail]] = oldChild
-    updatedTrav.tail = maxPrefix[NewTail]
+    updatedTrav.recNode.children[maxPrefix.oldTail] = oldChild
+    updatedTrav.tail = maxPrefix.newTail
 
     return updatedTrav
   }

@@ -1,7 +1,3 @@
-var Prefix = exports.Prefix = "prefix"
-var OldTail = exports.OldTail = "oldTail"
-var NewTail = exports.NewTail = "newTail"
-
 exports.sharedPathPrefix = function(subPath, existingComponents) {
   function maximumSharedPrefix(s1, s2) {
     var maxPrefixLength = Math.max(s1.length, s2.length)
