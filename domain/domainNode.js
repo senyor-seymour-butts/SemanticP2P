@@ -24,18 +24,9 @@ var PrefixCurrentKey = "trunc2"
 function traverseTree(root, path, missing, terminal, payload) {
   function traverseTreeRec(currentNode, path, isResource) {
     if (path.length > 0) {
-      var subPath = path[0]
       var pathCategory = isResource ? currentNode.resourceChildren : currentNode.children
 
-      var maxPrefix = {}
-      maxPrefix[PrefixKey] = maxPrefix[PrefixChildKey] = ""
-      maxPrefix[PrefixCurrentKey] = subPath
-
-      var allComps = Object.keys(pathCategory)
-      for (i = 0; i < allComps.length; i++) {
-        var currPrefix = maximumSharedPrefix(allComps[i], subPath)
-        maxPrefix = maxPrefix[PrefixKey].length >= currPrefix[PrefixKey].length ? maxPrefix : currPrefix
-      }
+      var maxPrefix = sharedPathPrefix(path[0], Object.keys(pathCategory))
 
       var updatedTraversal
       if (pathCategory[maxPrefix[PrefixKey]] == undefined) {
@@ -84,6 +75,18 @@ function addIfMissing(node, maxPrefix, isResource, payload) {
 
     return updatedTrav
   }
+}
+
+function sharedPathPrefix(subPath, existingComponents) {
+  var maxPrefix = {}
+  maxPrefix[PrefixKey] = maxPrefix[PrefixChildKey] = ""
+  maxPrefix[PrefixCurrentKey] = subPath
+
+  for (i = 0; i < existingComponents.length; i++) {
+    var currPrefix = maximumSharedPrefix(existingComponents[i], subPath)
+    maxPrefix = maxPrefix[PrefixKey].length >= currPrefix[PrefixKey].length ? maxPrefix : currPrefix
+  }
+  return maxPrefix
 }
 
 function maximumSharedPrefix(s1, s2) {
