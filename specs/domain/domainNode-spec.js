@@ -1,5 +1,5 @@
-var dn = require("../domain/domainNode")
-var dmn = require("../domain/domain")
+var dn = require("../../domain/domainNode")
+var dmn = require("../../domain/domain")
 
 describe("DomainNode/", function () {
   describe("Init", function () {

@@ -1,3 +1,5 @@
+var pUtil = require("../utils/path")
+
 function DomainNode (nameComponent) {
   this.nameComponent = nameComponent
   this.children = {}
@@ -12,9 +14,9 @@ dn.createDomainNode = function (nameComponent) {
   return new DomainNode(nameComponent)
 }
 
-var Prefix = "prefix"
-var OldTail = "oldTail"
-var NewTail = "newTail"
+var Prefix = pUtil.Prefix
+var OldTail = pUtil.OldTail
+var NewTail = pUtil.NewTail
 
 //root: DomainNode, head of tree, recursively changed to next node
 //path: String, path to follow, recursively changed to tail of path
@@ -26,7 +28,7 @@ function traverseTree(root, path, missing, terminal, payload) {
     if (path.length > 0) {
       var pathCategory = isResource ? currentNode.resourceChildren : currentNode.children
 
-      var maxPrefix = sharedPathPrefix(path[0], Object.keys(pathCategory))
+      var maxPrefix = pUtil.sharedPathPrefix(path[0], Object.keys(pathCategory))
 
       var updatedTraversal
       if (pathCategory[maxPrefix[Prefix]] == undefined) {
@@ -47,7 +49,7 @@ function traverseTree(root, path, missing, terminal, payload) {
     }
   }
 
-  if (path.length > 0) {
+  if (pUtil.validPath(path)) {
     var resourceSepPath = path.split("/")
     traverseTreeRec(root, resourceSepPath, false)
   }
@@ -75,27 +77,6 @@ function addIfMissing(node, maxPrefix, isResource, payload) {
 
     return updatedTrav
   }
-}
-
-function sharedPathPrefix(subPath, existingComponents) {
-  function maximumSharedPrefix(s1, s2) {
-    var maxPrefixLength = Math.max(s1.length, s2.length)
-    for (i = 0; i < maxPrefixLength; i++) {
-      if (s1.charAt(i) != s2.charAt(i)) {
-        return {prefix: s1.substring(0,i), oldTail: s1.substr(i), newTail: s2.substr(i)}
-      } else if (s1.length == s2.length && i == s1.length-1) {
-        return {prefix: s1, oldTail: "", newTail: ""}
-      }
-    }
-  }
-  
-  for (i = 0; i < existingComponents.length; i++) {
-    var currPrefix = maximumSharedPrefix(existingComponents[i], subPath)
-    if (currPrefix[Prefix].length > 0) {
-      return currPrefix
-    }
-  }
-  return {prefix: "", oldTail: "", newTail: subPath}
 }
 
 DomainNode.prototype.addDomainComponent = function (domainPath, domain) {
