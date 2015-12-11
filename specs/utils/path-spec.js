@@ -1,4 +1,4 @@
-var pUtil = require("../../utils/path")
+var pUtil = require("../../src/utils/path")
 
 describe("SharedPathPrefix returns", function () {
   var existingComps

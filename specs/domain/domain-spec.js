@@ -1,4 +1,4 @@
-var dmn = require("../../domain/domain")
+var dmn = require("../../src/domain/domain")
 
 describe("Domain/", function () {
   describe("Functions/", function () {

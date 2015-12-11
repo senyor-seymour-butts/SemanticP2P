@@ -1,6 +1,6 @@
-var dt = require("../../domain/domainTree")
-var dn = require("../../domain/domainNode")
-var dmn = require("../../domain/domain")
+var dt = require("../../src/domain/domainTree")
+var dn = require("../../src/domain/domainNode")
+var dmn = require("../../src/domain/domain")
 
 describe("DomainTree/", function () {
   describe("Init", function () {
